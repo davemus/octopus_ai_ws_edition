@@ -1,0 +1,6 @@
+FROM nvidia/cuda:10.0-devel
+
+ADD requirements_gpu.txt requirements_gpu.txt
+RUN pip install -r requirements_cpu.txt
+
+

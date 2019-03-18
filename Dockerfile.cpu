@@ -1,0 +1,8 @@
+FROM python:3.6
+
+ADD requirements_cpu.txt requirements_cpu.txt
+ADD requirements.txt requirements.txt
+
+RUN pip install -r requirements_cpu.txt
+RUN pip install -r requirements.txt
+
