@@ -1,6 +1,11 @@
 FROM nvidia/cuda:10.0-devel
 
-ADD requirements_gpu.txt requirements_gpu.txt
-RUN pip install -r requirements_cpu.txt
+RUN useradd -ms /bin/bash control
 
+USER control
+ADD requirements* /tmp/
+
+RUN pip install --upgrade pip && \
+    pip install --user -r /tmp/requirements.txt && \
+    pip install --user -r /tmp/requirements_cpu.txt
 
