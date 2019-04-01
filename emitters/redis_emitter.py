@@ -1,6 +1,7 @@
 from .emitter import Emitter
 from datetime import datetime
 from redis import StrictRedis
+from loguru import logger
 
 
 class RedisEmitter(Emitter):
@@ -19,4 +20,5 @@ class RedisEmitter(Emitter):
         self.publisher = StrictRedis.from_url(self.redis_url)
 
     def _send(self, data):
+        logger.info(f'Sending {data} to {self.channel_name}')
         self.publisher.publish(self.channel_name, data)

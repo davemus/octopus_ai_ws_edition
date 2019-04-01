@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class Worker(Process):
 
-    def __init__(self, model: Model, receiver: Receiver, recorders: Sequence[Recorder], **kwargs):
+    def __init__(self, model: 'Model', receiver: 'Receiver', recorders: 'Sequence[Recorder]', **kwargs):
         super().__init__(**kwargs)
         self.model = model
         self.receiver = receiver

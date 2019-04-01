@@ -1,3 +1,4 @@
+import json
 import time
 from multiprocessing import Process
 from datetime import datetime
@@ -30,15 +31,18 @@ class Emitter(Process):
         data = pd.read_csv(self.data_path, sep=';',
                            parse_dates={'dt': ['Date', 'Time']}, infer_datetime_format=True,
                            low_memory=False, na_values=['nan', '?'], index_col='dt')
-        self.data = data.iloc[self.start_date:self.end_date].resample(self.period)[self.columns_to_emit]
+        data = data[self.start_date:self.end_date]
+        self.data = data[self.columns_to_emit].resample(self.period).apply(sum)
 
     def _pre_start(self):
         raise NotImplementedError()
 
     def _loop(self):
         for data_point in self.data.values:
-            self._send({column: val for column, val in zip(self.columns_to_emit, data_point)})
+            self._send(json.dumps({column: val for column, val in zip(self.columns_to_emit, data_point)}))
             time.sleep(self.delay)
+            if self._stop:
+                break
 
     def _send(self, data):
         raise NotImplementedError()
@@ -46,7 +50,7 @@ class Emitter(Process):
     def stop(self):
         self._stop = True
 
-    def start(self):
+    def run(self):
         self.load_data()
         self._pre_start()
         self._loop()

@@ -8,18 +8,22 @@ services:
 
   emitter:
     image: octopus_ws:cpu
+    container_name: octopus_ws_emitter
+    working_dir: /app
     links:
       - redis
     volumes:
-      - ./data:/data
-      - ./emitters:/emitters
+      - ./data:/app/data
+      - ./emitters:/app/emitters
+      - ./emitter_main.py:/app/main.py
     command: "tail -f /dev/null"
 
 
   control:
     image: octopus_ws:cpu
+    container_name: octopus_ws_control
     volumes:
-      - ./main.py:/app/main.py
+      - ./control_main.py:/app/main.py
       - ./electricity_control:/app/electricity_control
       - ./models:/app/models
       - ./data:/app/data

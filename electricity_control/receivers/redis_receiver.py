@@ -16,3 +16,5 @@ class RedisReceiver(Receiver):
         redis = StrictRedis.from_url(self.redis_url)
         self.subscriber = redis.pubsub()
         self.subscriber.subscribe(self.channel)
+
+# Got {'type': 'message', 'pattern': None, 'channel': b'test', 'data': b'{"Global_active_power": 1269.2360000000006}'}

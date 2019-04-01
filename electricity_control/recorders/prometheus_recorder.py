@@ -1,4 +1,5 @@
 from .recorder import Recorder
+from loguru import logger
 
 
 class PrometheusRecorder(Recorder):
@@ -7,7 +8,7 @@ class PrometheusRecorder(Recorder):
         pass
 
     def record(self, data):
-        pass
+        logger.info(f'Got {data}')
 
     def start(self):
         pass
