@@ -5,5 +5,5 @@ from electricity_control.worker import Worker
 from electricity_control.bokeh_visualiser import BokehVisualiser
 
 
-worker = Worker(LSTMModel(), RedisReceiver('redis://redis:6379', 'test'), [PrometheusRecorder()])
+worker = Worker(LSTMModel(), MqttReceiver('mosquitto', 1883, 'test'), [PrometheusRecorder()])
 worker.start()

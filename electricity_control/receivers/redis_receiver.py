@@ -1,5 +1,6 @@
 from .receiver import Receiver
 from redis import StrictRedis
+import json
 
 
 class RedisReceiver(Receiver):
@@ -9,8 +10,10 @@ class RedisReceiver(Receiver):
         self.channel = channel
         self.subscriber = None
 
-    def __iter__(self):
-        return iter(self.subscriber.listen())
+    def _iter_f(self):
+        for msg in self.subscriber.listen():
+            if msg['type'] == 'message':
+                yield json.loads(msg['data'])
 
     def start(self):
         redis = StrictRedis.from_url(self.redis_url)

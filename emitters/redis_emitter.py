@@ -9,8 +9,8 @@ class RedisEmitter(Emitter):
 
     """
 
-    def __init__(self, redis_url: str, channel_name: str, period: str, start_date: datetime,
-                 end_date: datetime, **kwargs):
+    def __init__(self, redis_url: str, channel_name: str, period: str, start_date: str,
+                 end_date: str, **kwargs):
         super().__init__(period, start_date, end_date, **kwargs)
         self.redis_url = redis_url
         self.channel_name = channel_name

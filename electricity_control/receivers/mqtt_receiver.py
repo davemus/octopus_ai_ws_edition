@@ -2,6 +2,7 @@ from queue import Queue
 
 import paho.mqtt.client as mqtt
 from .receiver import Receiver
+from loguru import logger
 
 
 class MqttReceiver(Receiver):
@@ -14,12 +15,8 @@ class MqttReceiver(Receiver):
         self.client: mqtt.Client = None
         self.queue = Queue()
 
-    def __iter__(self):
-        return self._msg_generator()
-
-    def _msg_generator(self):
+    def _iter_f(self):
         while True:
-            self.client.loop_read()
             msg = self.queue.get()
             yield msg
 
@@ -31,3 +28,4 @@ class MqttReceiver(Receiver):
         self.client.on_message = self.on_message
         self.client.connect(self.url, self.port, self.keep_alive)
         self.client.subscribe(self.channel)
+        self.client.loop_start()

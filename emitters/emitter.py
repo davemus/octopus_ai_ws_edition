@@ -3,7 +3,7 @@ import time
 from multiprocessing import Process
 from datetime import datetime
 import pandas as pd
-from typing import List
+from typing import Sequence
 
 
 class Emitter(Process):
@@ -11,8 +11,8 @@ class Emitter(Process):
 
     """
 
-    def __init__(self, period: str, start_date: datetime, end_date: datetime, delay: int=5, loop: bool=False,
-                 data_path: str='/app/data/household_power_consumption.txt', columns_to_emit: List[str]=None,
+    def __init__(self, period: str, start_date: str, end_date: str, delay: int=5, loop: bool=False,
+                 data_path: str='/app/data/household_power_consumption.txt', columns_to_emit: Sequence[str]=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.period = period
