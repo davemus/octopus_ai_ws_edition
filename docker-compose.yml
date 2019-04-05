@@ -28,8 +28,11 @@ services:
       - ./models:/app/models
       - ./data:/app/data
       - ./PredictionModels.ipynb:/app/PredictionModels.ipynb
+      - ./templates/:/app/templates
+      - ./images/:/app/images
     working_dir: /app
     ports:
+      - 5006:5006
       - 8080:8080
       - 8888:8888
     user:

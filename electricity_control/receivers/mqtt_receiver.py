@@ -2,7 +2,6 @@ from queue import Queue
 
 import paho.mqtt.client as mqtt
 from .receiver import Receiver
-from loguru import logger
 
 
 class MqttReceiver(Receiver):

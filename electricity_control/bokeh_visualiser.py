@@ -1,53 +1,99 @@
 # http://bokeh.pydata.org/en/0.11.0/docs/user_guide/server.html
 # https://www.youtube.com/watch?v=NUrhOj3DzYs
+from typing import Sequence
 
-from bokeh.io import curdoc
+from bokeh.palettes import Viridis
+import json
+from loguru import logger
+
+from redis import StrictRedis
+from concurrent.futures import ThreadPoolExecutor
+
+from bokeh.util.browser import view
+
+from jinja2 import Environment, FileSystemLoader
+
+from tornado.web import RequestHandler
+
+from bokeh.embed import server_document
 from bokeh.models import ColumnDataSource
-from bokeh.plotting import Figure
+from bokeh.plotting import figure
+from bokeh.server.server import Server
 
-from bokeh.transform import factor_cmap
-from bokeh.layouts import gridplot
-
-import os
-import numpy as np
-import pandas as pd
-import random
-
-from statsmodels.tsa.api import Holt
+env = Environment(loader=FileSystemLoader('templates'))
 
 
 class BokehVisualiser:
 
-    def __init__(self):
-        pass
+    def __init__(self, redis_url: str, real_data_topic: str, data_interval: str, models_list: Sequence[str],
+                 pool_delay: int=2):
+        self.redis = StrictRedis.from_url(redis_url)
+        self.real_data_topic = real_data_topic
+        self.pool_delay = pool_delay
+        channels = [f'{model_name}_{data_interval}' for model_name in models_list]
+        channels.append(real_data_topic)
+        self.channels = channels
+        self.x_column = 'date'
+
+        self.source = ColumnDataSource({k: list() for k in self.channels + [self.x_column]})
+        self.p = figure(plot_width=950, height=300, tools='')
+        for channel, color in zip(self.channels, Viridis[len(channels)]):
+            self.p.line(source=self.source, x=self.x_column, y=channel, line_width=2, alpha=.85, color=color)
+
+        self.channel_counters = {k: 0 for k in self.channels}
+        self.callbacks_executor = None
+
+    def start(self):
+        self.callbacks_executor = ThreadPoolExecutor(max_workers=2)
+        self.callbacks_executor.submit(self._job)
+
+    def _job(self):
+        pubsub = self.redis.pubsub()
+        pubsub.subscribe(self.channels)
+        for message in pubsub.listen():
+            logger.debug(message)
+            try:
+                if message['type'] != 'message':
+                    continue
+                self.channel_counters[message['channel']] += 1
+                data = json.loads(message['data'])
+                if isinstance(data, dict):
+                    data = data.get('Global_active_power')
+                self.source.stream({message['channel']: [data],
+                                    self.x_column: [self.channel_counters[message['channel']]]},
+                                   100)
+            except Exception as e:
+                logger.trace(e)
+
+    def modify_doc(self, doc):
+        #doc = curdoc()
+        logger.info(f'{doc}, Modifying doc')
+        doc.add_root(self.p)
 
 
-# data_file_path = os.path.join(os.path.dirname(__file__), 'data', 'data_temp_pow_fan.csv')
-# df = pd.read_csv(data_file_path, parse_dates=['dt'])
-#
-# source = ColumnDataSource(dict(x=[], x_pred=[], temp=[], power=[], fan=[], frcst=[]))
-#
-# plot_options = dict(plot_width=950, height=300, tools='')
-#
-# s1 = Figure(title='Temperature of CPU', **plot_options)
-# s1.line(source=source, x='x', y='temp', line_width=2, alpha=.85, color='red', legend='Temperature, C')
-#
-# s1.line(source=source, x='x_pred', y='frcst', line_width=2, alpha=.85, color='green', legend='Forecasted temp., C ')
-#
-# s2 = Figure(x_range=s1.x_range, title='Power on CPU unit', **plot_options)
-# s2.line(source=source, x='x', y='power', line_width=2, alpha=.85, color='orange', legend='Power, W')
-#
-# s3 = Figure(x_range=s1.x_range, title='Fan rotation speed', **plot_options)
-# s3.line(source=source, x='x', y='fan', line_width=2, alpha=.85, color='blue', legend='Speed, RPM')
-#
-# p = gridplot([[s1], [s2], [s3]])
-#
-# temp = 0
-# power = 0
-# ind = 0
-# fan = 0
-#
-#
+class IndexHandler(RequestHandler):
+    def get(self):
+        template = env.get_template('embed.html')
+        script = server_document('http://localhost:5006/bkapp')
+        self.write(template.render(script=script))
+
+# Setting num_procs here means we can't touch the IOLoop before now, we must
+# let Server handle that. If you need to explicitly handle IOLoops then you
+# will need to use the lower level BaseServer class.
+
+
+def start_server(*args, **kwargs):
+    visualizer = BokehVisualiser(*args, **kwargs)
+    visualizer.start()
+    server = Server({'/bkapp': visualizer.modify_doc}, num_procs=4, extra_patterns=[('/', IndexHandler)])
+    server.start()
+    server.io_loop.add_callback(view, "http://localhost:5006/")
+    server.io_loop.start()
+
+
+if __name__ == '__main__':
+    start_server(redis_url='redis://redis:6379', real_data_topic='test', data_interval='d', models_list=['lstm', 'lgbm'])
+
 # def update_data():
 #     global ind, power, temp
 #     ind += 1

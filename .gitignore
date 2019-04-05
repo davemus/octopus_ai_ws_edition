@@ -105,3 +105,4 @@ venv.bak/
 .idea
 .ipynb_checkpoints
 data
+tmp*

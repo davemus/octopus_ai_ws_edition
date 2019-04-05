@@ -13,7 +13,7 @@ class RedisReceiver(Receiver):
     def _iter_f(self):
         for msg in self.subscriber.listen():
             if msg['type'] == 'message':
-                yield json.loads(msg['data'])
+                yield msg['data']
 
     def start(self):
         redis = StrictRedis.from_url(self.redis_url)
