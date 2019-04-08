@@ -50,19 +50,24 @@ class BokehVisualiser:
     def _job(self):
         pubsub = self.redis.pubsub()
         pubsub.subscribe(self.channels)
+
         for message in pubsub.listen():
             logger.debug(message)
             try:
                 if message['type'] != 'message':
                     continue
-                self.channel_counters[message['channel']] += 1
+                self.channel_counters[message['channel'].decode('utf-8')] += 1
                 data = json.loads(message['data'])
                 if isinstance(data, dict):
+
                     data = data.get('Global_active_power')
-                self.source.stream({message['channel']: [data],
-                                    self.x_column: [self.channel_counters[message['channel']]]},
-                                   100)
+                self.source.stream({message['channel'].decode('utf-8'): [data],
+                                    'lgbm_d': [0],
+                                    'lstm_d': [0],
+                                    self.x_column: [self.channel_counters[message['channel'].decode('utf-8')]]},
+                                    100)
             except Exception as e:
+                print(e, flush=True)
                 logger.trace(e)
 
     def modify_doc(self, doc):
