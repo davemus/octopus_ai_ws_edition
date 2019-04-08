@@ -13,10 +13,14 @@ class ProphetModel(Model):
         self.forecast = None
 
     def predict(self, data):
-        pass
+        try:
+            ret_val = self.forecast[data['date']]
+        except KeyError:
+            ret_val = 0
+        return ret_val
 
     def load(self):
         with open(self.model_path, 'rb') as f:
             self.model: Prophet = pickle.load(f)
         prediction_df = self.model.make_future_dataframe(periods=self.prediction_period, freq=self.data_freq)
-        self.forecast = self.model.predict(prediction_df)
+        self.forecast = self.model.predict(prediction_df[-self.prediction_period:])[['ds', 'yhat']]
