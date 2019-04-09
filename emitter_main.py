@@ -1,5 +1,9 @@
 from datetime import datetime
+import numpy as np
 from emitters import *
 
-redis_emitter = RedisEmitter('redis://redis:6379', 'test', 'd', '2006-12-26', '2007-12-26')
+redis_emitter = RedisEmitter('redis://redis:6379', 'data_h', 'h', '2006-12-26', '2007-12-26',
+                             columns_to_emit=['Global_active_power', 'Global_reactive_power', 'Voltage',
+                                              'Global_intensity', 'Sub_metering_1', 'Sub_metering_2', 'Sub_metering_3'],
+                             aggregation_fn=np.mean)
 redis_emitter.start()

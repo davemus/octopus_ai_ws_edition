@@ -16,4 +16,6 @@ RUN pip install --user -r /tmp/requirements.txt && \
 ENV PATH=$PATH:/home/control/.local/bin
 ENV PYTHONPATH=$PYTHONPATH:/app/
 
+RUN jupyter contrib nbextension install --user
+
 CMD "/bin/bash"

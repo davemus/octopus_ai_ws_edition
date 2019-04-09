@@ -6,7 +6,8 @@ from prometheus_client import start_http_server, Gauge
 class PrometheusRecorder(Recorder):
 
     def __init__(self, value_name, port):
-        self.summary = Gauge(value_name, f'{value_name} recorder')
+        self.value_name = value_name
+        self.summary = None
         self.port = port
 
     def record(self, data):
@@ -14,4 +15,8 @@ class PrometheusRecorder(Recorder):
         self.summary.set(data)
 
     def start(self):
-        start_http_server(self.port)
+        try:
+            self.summary = Gauge(self.value_name, f'{self.value_name} recorder')
+            start_http_server(self.port)
+        except OSError:
+            pass

@@ -2,6 +2,7 @@ from .model import Model
 from lightgbm import Booster
 import pandas as pd
 import numpy as np
+from loguru import logger
 
 
 weekday_mean_data = [1453.9886015018553, 1583.1144845385677, 1598.0504237151988, 1430.8047203176632,
@@ -45,14 +46,14 @@ def prepare_df(data, target_column='Global_active_power', lag_start=1, lag_end=7
 
 def notebook_prepare_data(all_data, new_data):
     new_data = pd.DataFrame.from_dict(new_data, orient='columns')
-    all_data = pd.concat([all_data, new_data])
+    all_data = pd.concat([all_data, new_data], axis=0)
     if all_data.shape[0] >= 5:
         return prepare_df(all_data)
 
 
 class LGBMModel(Model):
 
-    def __init__(self, path_to_weights, config, prepare_data_function):
+    def __init__(self, path_to_weights, config, prepare_data_function=notebook_prepare_data):
         self.path_to_weights = path_to_weights
         self.config = config
         self.booster: Booster = None
@@ -60,9 +61,11 @@ class LGBMModel(Model):
         self.prepare_data = prepare_data_function
 
     def predict(self, data):
+        logger.debug(f'Got {data}')
         data = self.prepare_data(self.all_data, data)
         if data is not None:
             prediction = self.booster.predict(data)
+            logger.debug(f'Predicted {data}')
             return np.exp(prediction)
 
     def load(self):
