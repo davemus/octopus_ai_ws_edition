@@ -5,22 +5,35 @@ from electricity_control.worker import Worker
 from electricity_control.bokeh_visualiser import BokehVisualiser
 
 
-worker1 = Worker(LSTMModel('models/lstm_keras'), RedisReceiver('redis://redis:6379', 'data_h'),
-                [PrometheusRecorder('lstm_keras_h', 8000),
-                RedisRecorder('redis://redis:6379', 'lstm_keras_h')])
+# worker1 = Worker(LSTMModel('models/lstm_keras'), RedisReceiver('redis://redis:6379', 'data_h'),
+#                 [PrometheusRecorder('lstm_keras_h', 8000),
+#                 RedisRecorder('redis://redis:6379', 'lstm_keras_h')])
+# worker1.start()
+
+# worker1 = Worker(LGBMModel('models/light_gbm/weights.gbm', {}), RedisReceiver('redis://redis:6379', 'data_d'),
+#                  [PrometheusRecorder('lgmb_d', 8001),
+#                  RedisRecorder('redis://redis:6379', 'lgmb_d')])
+# worker1.start()
+
+
+# worker1 = Worker(ProphetModel('models/fbprophet/model_wb.pkl', 'd', 0.6665092992069518), RedisReceiver('redis://redis:6379', 'data_d'),
+#                  [PrometheusRecorder('fbprophet_d', 8002),
+#                  RedisRecorder('redis://redis:6379', 'fbprophet_d')])
+# worker1.start()
+
+
+worker1 = Worker(SarimaModel('models/sarima/model.sa', 'd', 30), RedisReceiver('redis://redis:6379', 'data_d'),
+                 [PrometheusRecorder('sarima_d', 8004),
+                 RedisRecorder('redis://redis:6379', 'sarima_d')])
 worker1.start()
 
-worker1 = Worker(LGBMModel('models/light_gbm/weights.gbm', {}), RedisReceiver('redis://redis:6379', 'data_d'),
-                [PrometheusRecorder('lgmb_d', 8001),
-                RedisRecorder('redis://redis:6379', 'lgmb_d')])
-worker1.start()
 
-worker2 = Worker(IdentityModel(), RedisReceiver('redis://redis:6379', 'data_h'),
-                [PrometheusRecorder('data_h', 8002)])
-worker2.start()
+# worker2 = Worker(IdentityModel(), RedisReceiver('redis://redis:6379', 'data_h'),
+#                 [PrometheusRecorder('data_h', 8002)])
+# worker2.start()
 
 worker2 = Worker(IdentityModel(), RedisReceiver('redis://redis:6379', 'data_d'),
-                [PrometheusRecorder('data_d', 8003)])
+                 [PrometheusRecorder('data_d', 8003)])
 worker2.start()
 
 
