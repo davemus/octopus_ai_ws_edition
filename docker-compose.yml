@@ -1,0 +1,86 @@
+version: "3"
+
+services:
+
+  mosquitto:
+   image: eclipse-mosquitto:1.5.8
+
+
+  emitter:
+    image: evge22/octopus_ai_ws:cpu
+    container_name: octopus_ws_emitter
+    working_dir: /app
+    links:
+      - redis
+    volumes:
+      - ./data:/app/data
+      - ./emitters:/app/emitters
+      - ./emitter_main.py:/app/emitter_main.py
+    command: "tail -f /dev/null"
+
+
+  control:
+    image: evge22/octopus_ai_ws:cpu
+    container_name: octopus_ws_control
+    volumes:
+      - ./control_main.py:/app/control_main.py
+      - ./electricity_control:/app/electricity_control
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./PredictionModels.ipynb:/app/PredictionModels.ipynb
+      - ./test.ipynb:/app/test.ipynb
+      - ./templates/:/app/templates
+      - ./images/:/app/images
+    working_dir: /app
+    ports:
+      - 5006:5006
+      - 8080:8080
+      - 8888:8888
+    user:
+      control
+    links:
+      - redis
+      - emitter
+      - prometheus
+      - mosquitto
+    command: "/home/control/.local/bin/jupyter-notebook --ip 0.0.0.0 --port 8888"
+
+
+  prometheus:
+    image: prom/prometheus:v2.8.0
+    volumes:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml
+        - prometheus_data:/prometheus
+    links:
+      - node_exporter
+    command:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+        - '9090:9090'
+
+
+  node_exporter:
+    image: prom/node-exporter:v0.17.0
+
+
+  grafana:
+    image: grafana/grafana:6.0.2
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=pass
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+
+
+  redis:
+    image: redis:4.0.14-alpine3.9
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: "redis-server /usr/local/etc/redis/redis.conf"
+
+volumes:
+  prometheus_data:
+  grafana_data:
