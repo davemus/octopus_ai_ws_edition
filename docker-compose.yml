@@ -15,7 +15,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./emitters:/app/emitters
-      - ./emitter_main.py:/app/main.py
+      - ./emitter_main.py:/app/emitter_main.py
     command: "tail -f /dev/null"
 
 
@@ -23,11 +23,12 @@ services:
     image: octopus_ws:cpu
     container_name: octopus_ws_control
     volumes:
-      - ./control_main.py:/app/main.py
+      - ./control_main.py:/app/control_main.py
       - ./electricity_control:/app/electricity_control
       - ./models:/app/models
       - ./data:/app/data
       - ./PredictionModels.ipynb:/app/PredictionModels.ipynb
+      - ./test.ipynb:/app/test.ipynb
       - ./templates/:/app/templates
       - ./images/:/app/images
     working_dir: /app
