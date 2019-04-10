@@ -45,10 +45,14 @@ def prepare_df(data, target_column='Global_active_power', lag_start=1, lag_end=7
 
 
 def notebook_prepare_data(all_data, new_data):
-    new_data = pd.DataFrame.from_dict(new_data, orient='columns')
-    all_data = pd.concat([all_data, new_data], axis=0)
-    if all_data.shape[0] >= 5:
-        return prepare_df(all_data)
+    new_data = pd.DataFrame(new_data, index=[0])
+    all_data: pd.DataFrame = pd.concat([all_data, new_data], axis=0)
+    all_data.set_index(np.arange(len(all_data)), inplace=True)
+    if all_data.shape[0] >= 6:
+        data = prepare_df(all_data)
+        all_data.drop(0, inplace=True)
+        return all_data, data
+    return all_data, None
 
 
 class LGBMModel(Model):
@@ -62,11 +66,14 @@ class LGBMModel(Model):
 
     def predict(self, data):
         logger.debug(f'Got {data}')
-        data = self.prepare_data(self.all_data, data)
+        self.all_data, data = self.prepare_data(self.all_data, data)
+        logger.debug(f'Modified {self.all_data}')
         if data is not None:
-            prediction = self.booster.predict(data)
-            logger.debug(f'Predicted {data}')
-            return np.exp(prediction)
+            logger.debug(f'')
+            prediction = self.booster.predict(data.values)
+            logger.debug(f'Predicted {prediction}')
+            return np.exp(prediction)[0]
+        return 0
 
     def load(self):
         self.booster = Booster(model_file=self.path_to_weights)

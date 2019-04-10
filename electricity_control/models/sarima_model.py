@@ -1,25 +1,34 @@
 from .model import Model
 import pickle
-import pandas as pd
+import numpy as np
+import datetime
+from loguru import logger
+
+mapping = {'d': 'days', 'H': 'hours'}
 
 
 class SarimaModel(Model):
 
-    def __init__(self, path_to_model, start_date, pred_freq, pred_periods, prediction_postprocess):
+    def __init__(self, path_to_model, pred_freq, pred_periods, prediction_postprocess=np.exp):
         self.model = None
-        self.start_date = start_date
         self.pred_freq = pred_freq
+        self.timedelta_param_name = mapping[self.pred_freq]
         self.path_to_model = path_to_model
         self.pred_periods = pred_periods
         self.forecast = None
         self.prediction_postprocess = prediction_postprocess
 
     def predict(self, data):
-        pass
+        try:
+            ret_val = self.forecast[data['date'] + datetime.timedelta(**{self.timedelta_param_name: 1})]
+        except KeyError as e:
+            logger.debug(e)
+            ret_val = 0
+        return ret_val
 
     def load(self):
         with open(self.path_to_model, 'rb') as f:
             self.model = pickle.load(f)
-        forecast_dates = pd.date_range(self.start_date, periods=self.pred_periods, freq=self.pred_freq)
-        forecast_data = self.model.forecast(self.pred_periods)
-        self.forecast = pd.DataFrame.from_dict({'date': forecast_dates, 'forecast': forecast_data}, orient='columns')
+        self.forecast = self.prediction_postprocess(self.model.forecast(self.pred_periods))
+        logger.debug(self.forecast.head())
+        logger.debug(self.forecast.tail())
