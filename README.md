@@ -1,7 +1,7 @@
 # Octopus AI Workshop edition
 
-This branch is intended to be used for learning. It contains unfinished code that you will need to write. 
-Working finished version are be found in the *finished* branch (might not exist yet) 
+This branch is intended to be used for learning. It contains unfinished code that you will need to write to make it usable. 
+Working finished version are to be found in the *finished* branch (might not exist yet) 
  
 
 ## Requirements
@@ -10,7 +10,7 @@ Working finished version are be found in the *finished* branch (might not exist 
 - *Preferably a type of bash shell and some basic Linux programs like wget, unzip*  
 
 ## Usage
-1. Download this repository
+1. Clone this repository
 2. Launch `init.sh` to download the models' weights and time-series data _or_ [download them manually](#manual-data-and-models-download) 
 3. Run `docker-compose up -d`
 4. Run `docker-compose logs -f control` and find the token provided by the jupyter
@@ -20,7 +20,7 @@ Working finished version are be found in the *finished* branch (might not exist 
 
 ## Testing
 **test.ipynb** was created for testing purposes. To open it, complete the steps above and then run all the cells in this notebook.  
-If not errors were encountered, the project was set up properly 
+If no errors were encountered, the project was set up properly. Tensorflow Warnings are fine.
 
 ## Manual data and models download
 The project contains a number of different models and one data source.  
