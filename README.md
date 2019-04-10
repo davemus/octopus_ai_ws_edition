@@ -13,9 +13,10 @@ Working finished version are to be found in the *finished* branch (might not exi
 1. Clone this repository
 2. Launch `init.sh` to download the models' weights and time-series data _or_ [download them manually](#manual-data-and-models-download) 
 3. Run `docker-compose up -d`
-4. Run `docker-compose logs -f control` and find the token provided by the jupyter
-5. Open `localhost:8888` and copy the token there
-6. Experiment!
+4. Run `docker-compose ps` and make sure that all the containers are Up   
+5. Run `docker-compose logs control` and find the token provided by the jupyter
+6. Open `localhost:8888` and copy the token there
+7. Experiment!
 
 
 ## Testing
