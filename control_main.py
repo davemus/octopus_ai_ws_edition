@@ -4,47 +4,45 @@ from electricity_control.recorders import RedisRecorder, PrometheusRecorder
 from electricity_control.worker import Worker
 from electricity_control.bokeh_visualiser import BokehVisualiser
 
+redis_url = 'redis://redis:6379'
+hourly_mean = 'data_h_m'
+hourly_sum = 'data_h_s'
+daily_sum = 'data_d_s'
 
-# worker1 = Worker(LSTMModel('models/lstm_keras'), RedisReceiver('redis://redis:6379', 'data_h'),
-#                 [PrometheusRecorder('lstm_keras_h', 8000),
-#                 RedisRecorder('redis://redis:6379', 'lstm_keras_h')])
-# worker1.start()
+workers = [Worker(LSTMModel('models/lstm_keras'), RedisReceiver(redis_url, 'data_h'),
+                  [PrometheusRecorder('lstm_keras_h', 8000),
+                   RedisRecorder('redis://redis:6379', 'lstm_keras_h')]),
 
-# worker1 = Worker(LGBMModel('models/light_gbm/weights.gbm', {}), RedisReceiver('redis://redis:6379', 'data_d'),
-#                  [PrometheusRecorder('lgmb_d', 8001),
-#                  RedisRecorder('redis://redis:6379', 'lgmb_d')])
-# worker1.start()
+           Worker(LGBMModel('models/light_gbm/weights.gbm', {}), RedisReceiver(redis_url, 'daily_sum'),
+                  [PrometheusRecorder('lgmb_d', 8001),
+                   RedisRecorder(redis_url, 'lgmb_d')]),
 
+           Worker(ProphetModel('models/fbprophet/model_wb.pkl', 'd', 0.6665092992069518),
+                  RedisReceiver(redis_url, 'daily_sum'),
+                  [PrometheusRecorder('fbprophet_d', 8002),
+                   RedisRecorder(redis_url, 'fbprophet_d')]),
 
-# worker1 = Worker(ProphetModel('models/fbprophet/model_wb.pkl', 'd', 0.6665092992069518), RedisReceiver('redis://redis:6379', 'data_d'),
-#                  [PrometheusRecorder('fbprophet_d', 8002),
-#                  RedisRecorder('redis://redis:6379', 'fbprophet_d')])
-# worker1.start()
+           Worker(SarimaModel('models/sarima/model.sa', 'd', 30), RedisReceiver(redis_url, 'daily_sum'),
+                  [PrometheusRecorder('sarima_d', 8004),
+                   RedisRecorder(redis_url, 'sarima_d')]),
 
+           Worker(IdentityModel(), RedisReceiver(redis_url, hourly_mean),
+                  [PrometheusRecorder(hourly_mean, 8002)]),
+           Worker(IdentityModel(), RedisReceiver(redis_url, hourly_sum),
+                  [PrometheusRecorder(hourly_sum, 8003)]),
+           Worker(IdentityModel(), RedisReceiver(redis_url, daily_sum),
+                 [PrometheusRecorder(daily_sum, 8003)])
+           ]
 
-worker1 = Worker(SarimaModel('models/sarima/model.sa', 'd', 30), RedisReceiver('redis://redis:6379', 'data_d'),
-                 [PrometheusRecorder('sarima_d', 8004),
-                 RedisRecorder('redis://redis:6379', 'sarima_d')])
-worker1.start()
+for worker in workers:
+    worker.start()
 
+worker = Worker(LSTMModel('models/lstm_keras_d'), RedisReceiver(redis_url, 'data_d'),
+                [PrometheusRecorder('lstm_keras_d', 8001),
+                 RedisRecorder(redis_url, 'lstm_keras_d')])
+worker.start()
 
-# worker2 = Worker(IdentityModel(), RedisReceiver('redis://redis:6379', 'data_h'),
-#                 [PrometheusRecorder('data_h', 8002)])
-# worker2.start()
-
-worker2 = Worker(IdentityModel(), RedisReceiver('redis://redis:6379', 'data_d'),
-                 [PrometheusRecorder('data_d', 8003)])
-worker2.start()
-
-
-# worker = Worker(LSTMModel('models/lstm_keras_d'), RedisReceiver('redis://redis:6379', 'data_d'),
-#                 [PrometheusRecorder('lstm_keras_d', 8001),
-#                 RedisRecorder('redis://redis:6379', 'lstm_keras_d')])
-# worker.start()
-#
-# worker = Worker(LSTMModel('models/lgbm_d'), RedisReceiver('redis://redis:6379', 'data_d'),
-#                 [PrometheusRecorder('lgbm_d', 8000),
-#                 RedisRecorder('redis://redis:6379', 'lgbm_d')])
-# worker.start()
-
-
+worker = Worker(LSTMModel('models/lgbm_d'), RedisReceiver(redis_url, 'data_d'),
+                [PrometheusRecorder('lgbm_d', 8000),
+                 RedisRecorder(redis_url, 'lgbm_d')])
+worker.start()
