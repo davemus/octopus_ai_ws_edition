@@ -5,7 +5,9 @@ global:
 scrape_configs:
     - job_name: 'prometheus'
       static_configs:
-      - targets: ['localhost:9090', 'control:8000', 'control:8001', 'control:8002', 'control:8003', 'control:8003']
+      - targets: ['localhost:9090', 'control:8000', 'control:8001', 'control:8002', 'control:8003', 'control:8003',
+      'control:8004', 'control:8005', 'control:8006', 'control:8007', 'control:8008',
+      'control:8009', 'control:8010', 'control:8011']
 
     - job_name: 'node_exporter'
       static_configs:

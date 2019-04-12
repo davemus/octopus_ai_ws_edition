@@ -19,14 +19,28 @@ class LSTMModel(Model):
         self.path_to_weights_folder = path_to_weights_folder
         self.model = None
         self.scaler = None
+        self.all_data = []
+
+    def prepare_data(self, data):
+        data = np.array([data[k] for k in columns])
+        self.all_data.append(data)
+        if len(self.all_data) == 7:
+            data = self.scaler.transform(np.array(self.all_data))
+            data = np.expand_dims(data, 0)
+            self.all_data.pop(0)
+            return data
 
     def predict(self, data: Dict[str, Any]):
-        data = np.array([data[k] for k in columns])
-        data = self.scaler.transform(np.expand_dims(data, 0))
-        data = np.expand_dims(data, 0)
-        prediction = self.model.predict(data)
-        prediction = np.concatenate([prediction, data[0][:, 1:]], axis=-1)
-        return self.scaler.inverse_transform(prediction)[0][0]
+        logger.debug(f'Got {data}')
+        data = self.prepare_data(data)
+        logger.debug(f'Prepared {data}')
+        if data is not None:
+            prediction = self.model.predict(data)
+            logger.debug(f'Prediction {prediction}')
+            logger.debug(f'{prediction.shape}, {data[0][0, 1:].shape}')
+            prediction = np.concatenate([prediction, np.expand_dims(data[0][0][1:], 0)], axis=-1)
+            return self.scaler.inverse_transform(prediction)[0][0]
+        return 0
 
     def load(self):
         model_structure_path = os.path.join(self.path_to_weights_folder, 'model.json')
