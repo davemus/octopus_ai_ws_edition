@@ -57,9 +57,8 @@ def notebook_prepare_data(all_data, new_data):
 
 class LGBMModel(Model):
 
-    def __init__(self, path_to_weights, config, prepare_data_function=notebook_prepare_data):
+    def __init__(self, path_to_weights, prepare_data_function=notebook_prepare_data):
         self.path_to_weights = path_to_weights
-        self.config = config
         self.booster: Booster = None
         self.all_data = pd.DataFrame()
         self.prepare_data = prepare_data_function

@@ -9,13 +9,16 @@ mapping = {'d': 'days', 'H': 'hours'}
 
 class SarimaModel(Model):
 
-    def __init__(self, path_to_model, pred_freq, pred_periods, prediction_postprocess=np.exp):
+    def __init__(self, path_to_model, path_to_exog, pred_freq, pred_periods,
+                 prediction_postprocess=np.exp):
         self.model = None
         self.pred_freq = pred_freq
         self.timedelta_param_name = mapping[self.pred_freq]
         self.path_to_model = path_to_model
         self.pred_periods = pred_periods
         self.forecast = None
+        self.exog = None
+        self.path_to_exog = path_to_exog
         self.prediction_postprocess = prediction_postprocess
 
     def predict(self, data):
@@ -29,6 +32,8 @@ class SarimaModel(Model):
     def load(self):
         with open(self.path_to_model, 'rb') as f:
             self.model = pickle.load(f)
-        self.forecast = self.prediction_postprocess(self.model.forecast(self.pred_periods))
+        with open(self.path_to_exog, 'rb') as f:
+            self.exog = np.load(f)
+        self.forecast = self.prediction_postprocess(self.model.forecast(self.pred_periods), exog=self.exog)
         logger.debug(self.forecast.head())
         logger.debug(self.forecast.tail())

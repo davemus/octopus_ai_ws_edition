@@ -2,47 +2,53 @@ from electricity_control.models import LGBMModel, IdentityModel, LSTMModel, Sari
 from electricity_control.receivers import RedisReceiver, MqttReceiver
 from electricity_control.recorders import RedisRecorder, PrometheusRecorder
 from electricity_control.worker import Worker
-from electricity_control.bokeh_visualiser import BokehVisualiser
 
 redis_url = 'redis://redis:6379'
+mqtt_host = 'mosquitto'
+mqtt_port = 1883
 hourly_mean = 'data_h_m'
-hourly_sum = 'data_h_s'
 daily_sum = 'data_d_s'
+daily_mean = 'data_d_m'
 
-workers = [Worker(LSTMModel('models/lstm_keras'), RedisReceiver(redis_url, 'data_h'),
-                  [PrometheusRecorder('lstm_keras_h', 8000),
+workers = [
+           Worker(LSTMModel('models/lstm_keras_h'), RedisReceiver(redis_url, hourly_mean),
+                  [PrometheusRecorder('lstm_keras_h', 8001),
                    RedisRecorder('redis://redis:6379', 'lstm_keras_h')]),
+           Worker(LSTMModel('models/lstm_keras_d_sum'), RedisReceiver(redis_url, daily_sum),
+                  [PrometheusRecorder('lstm_keras_d_s', 8002),
+                   RedisRecorder('redis://redis:6379', 'lstm_keras_d_s')]),
+           Worker(LSTMModel('models/lstm_keras_d_mean'), MqttReceiver(mqtt_host, mqtt_port, daily_mean),
+                  [PrometheusRecorder('lstm_keras_d_m', 8003),
+                   RedisRecorder('redis://redis:6379', 'lstm_keras_d_m')]),
 
-           Worker(LGBMModel('models/light_gbm/weights.gbm', {}), RedisReceiver(redis_url, 'daily_sum'),
-                  [PrometheusRecorder('lgmb_d', 8001),
-                   RedisRecorder(redis_url, 'lgmb_d')]),
+           Worker(LGBMModel('models/light_gbm_d_sum/weights.gbm'), RedisReceiver(redis_url, daily_sum),
+                  [PrometheusRecorder('lgmb_d_sum', 8004),
+                   RedisRecorder(redis_url, 'lgmb_d_sum')]),
+           Worker(LGBMModel('models/light_gbm_d_mean/weights.gbm'), MqttReceiver(mqtt_host, mqtt_port, daily_mean),
+                  [PrometheusRecorder('lgmb_d_mean', 8005),
+                   RedisRecorder(redis_url, 'lgmb_d_mean')]),
+           Worker(LGBMModel('models/light_gbm_h_mean/weights.gbm'), RedisReceiver(redis_url, daily_sum),
+                  [PrometheusRecorder('lgmb_h_mean', 8006),
+                   RedisRecorder(redis_url, 'lgmb_h_mean')]),
 
-           Worker(ProphetModel('models/fbprophet/model_wb.pkl', 'd', 0.6665092992069518),
-                  RedisReceiver(redis_url, 'daily_sum'),
-                  [PrometheusRecorder('fbprophet_d', 8002),
+           Worker(ProphetModel('models/fbprophet/model.pkl', 'd'),
+                  RedisReceiver(redis_url, daily_sum),
+                  [PrometheusRecorder('fbprophet_d', 8007),
                    RedisRecorder(redis_url, 'fbprophet_d')]),
 
-           Worker(SarimaModel('models/sarima/model.sa', 'd', 30), RedisReceiver(redis_url, 'daily_sum'),
-                  [PrometheusRecorder('sarima_d', 8004),
+           Worker(SarimaModel('models/sarima/model.sa', 'models/sarima/exog.npy', 'd', 30),
+                  MqttReceiver(mqtt_host, mqtt_port, daily_mean),
+                  [PrometheusRecorder('sarima_d', 8008),
                    RedisRecorder(redis_url, 'sarima_d')]),
 
            Worker(IdentityModel(), RedisReceiver(redis_url, hourly_mean),
-                  [PrometheusRecorder(hourly_mean, 8002)]),
-           Worker(IdentityModel(), RedisReceiver(redis_url, hourly_sum),
-                  [PrometheusRecorder(hourly_sum, 8003)]),
+                  [PrometheusRecorder(hourly_mean, 8009)]),
+           Worker(IdentityModel(), MqttReceiver(mqtt_host, mqtt_port, daily_mean),
+                  [PrometheusRecorder(daily_mean, 8010)]),
            Worker(IdentityModel(), RedisReceiver(redis_url, daily_sum),
-                 [PrometheusRecorder(daily_sum, 8003)])
+                 [PrometheusRecorder(daily_sum, 8011)])
            ]
 
 for worker in workers:
     worker.start()
 
-worker = Worker(LSTMModel('models/lstm_keras_d'), RedisReceiver(redis_url, 'data_d'),
-                [PrometheusRecorder('lstm_keras_d', 8001),
-                 RedisRecorder(redis_url, 'lstm_keras_d')])
-worker.start()
-
-worker = Worker(LSTMModel('models/lgbm_d'), RedisReceiver(redis_url, 'data_d'),
-                [PrometheusRecorder('lgbm_d', 8000),
-                 RedisRecorder(redis_url, 'lgbm_d')])
-worker.start()
