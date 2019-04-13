@@ -27,8 +27,8 @@ If no errors were encountered, the project was set up properly. Tensorflow Warni
 The project contains a number of different models and one data source.  
 * You can download the data by following the link [here](https://archive.ics.uci.edu/ml/machine-learning-databases/00235/household_power_consumption.zip)   
 For the system to work properly you will need to create the folder **data** and extract the contents of the zip archive there   
-* Models' weights will be downloadable later  
-// _Contents of this archive should be placed inside of the **models** folder that you will need to also create_ // 
+* Models' weights can be downloaded [here](https://www.dropbox.com/s/y7qhpbiw33n4dfp/models.zip?dl=0)
+Contents of this archive should be placed inside of the **models** folder that you will need to also create
 
 ## Launching the electricity control package
 1. Run `docker exec -ti octopus_ws_emitter python emitter_main.py` in a separate terminal
