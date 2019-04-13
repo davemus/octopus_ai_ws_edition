@@ -4,6 +4,7 @@ from multiprocessing import Process
 import datetime
 import numpy as np
 import pandas as pd
+from loguru import logger
 from typing import Sequence
 from abc import ABC, abstractmethod
 
@@ -42,6 +43,8 @@ class Emitter(ABC, Process):
                            low_memory=False, na_values=['nan', '?'], index_col='dt')
         data = data[self.start_date:self.end_date]
         self.data = data[self.columns_to_emit].resample(self.period).apply(self.aggregation_fn)
+        logger.info(f'Data length: {self.data.shape[0]}')
+        logger.info(self.data)
 
     @abstractmethod
     def _pre_start(self):
@@ -65,8 +68,11 @@ class Emitter(ABC, Process):
         self._stop = True
 
     def run(self):
-        self.load_data()
-        self._pre_start()
-        self._loop()
-        while self.loop and not self._stop:
+        try:
+            self.load_data()
+            self._pre_start()
             self._loop()
+            while self.loop and not self._stop:
+                self._loop()
+        except Exception as e:
+            logger.info(e)
