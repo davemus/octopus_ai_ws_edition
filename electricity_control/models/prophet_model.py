@@ -22,7 +22,7 @@ class ProphetModel(Model):
                 ind = 0
             logger.debug(f'Ind: {ind}')
             logger.debug(f'Ind: {ind+1}')
-            ret_val = (self.forecast.iloc[ind+1, 1]).values[0]
+            ret_val = self.forecast.iloc[ind+1, 1]
 
         except KeyError:
             ret_val = 0

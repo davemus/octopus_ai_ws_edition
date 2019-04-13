@@ -34,6 +34,6 @@ class SarimaModel(Model):
             self.model = pickle.load(f)
         with open(self.path_to_exog, 'rb') as f:
             self.exog = np.load(f)
-        self.forecast = self.prediction_postprocess(self.model.forecast(self.pred_periods), exog=self.exog)
+        self.forecast = self.prediction_postprocess(self.model.forecast(self.pred_periods, exog=self.exog))
         logger.debug(self.forecast.head())
         logger.debug(self.forecast.tail())
