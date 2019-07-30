@@ -44,6 +44,11 @@ workers = [
                   [PrometheusRecorder('sarima_d_m', 8008),
                    RedisRecorder(redis_url, 'sarima_d_m')]),
 
+           Worker(MovingAverageModel('', 'models/sarima/exog.npy', 'd', 31),
+                  MqttReceiver(mqtt_host, mqtt_port, daily_mean),
+                  [PrometheusRecorder('sarima_d_m', 8012),
+                   RedisRecorder(redis_url, 'moving_d_m')]),
+
            Worker(IdentityModel(), RedisReceiver(redis_url, hourly_mean),
                   [PrometheusRecorder(hourly_mean, 8009)]),
            Worker(IdentityModel(), MqttReceiver(mqtt_host, mqtt_port, daily_mean),
